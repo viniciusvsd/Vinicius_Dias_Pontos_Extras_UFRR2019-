@@ -1,0 +1,127 @@
+/*
+   Título: Funcionamento de uma Máquina de Estados
+   Autor: Vinícius Dias
+   Data: 19/08/2019
+*/
+
+//-------------------------------------------------------------------------------
+const int pinAlarme = 8;
+const int pinTrava = 9;
+//-------------------------------------------------------------------------------
+enum State {Locked, Unlocked};
+//enum Event {Pass, Coin};
+//-------------------------------------------------------------------------------
+
+void Unlock() {
+
+  static State s;
+  digitalWrite(pinTrava, HIGH);
+  s = Unlocked;
+  Serial.println("Unlocked");
+
+}
+
+void Lock() {
+
+  static State s;
+  digitalWrite(pinTrava, LOW);
+  s = Locked;
+  Serial.println("Locked");
+
+}
+
+void Thankyou() {
+
+  Serial.println("Thank You !");
+  delay(3000);
+
+}
+
+void Alarm() {
+
+  Serial.println("Alarme Disparado");
+
+}
+
+void Transition(int e) {
+
+  static State s;
+  switch (s) {
+    case Locked:
+      switch (e) {
+        case 0:
+          s = Unlocked;
+          Unlock();
+          break;
+        case 1:
+          Alarm();
+          break;
+      }
+    case Unlocked:
+      switch (e) {
+        case 0:
+          Thankyou();
+          break;
+        case 1:
+          s = Locked;
+          Lock();
+          break;
+      }
+      break;
+  }
+
+}
+
+String leStringSerial() {
+  String conteudo = "";
+  char caractere;
+
+  // Enquanto receber algo pela serial
+  while (Serial.available() > 0) {
+    // Lê byte da serial
+    caractere = Serial.read();
+    // Ignora caractere de quebra de linha
+    if (caractere != '\n') {
+      // Concatena valores
+      conteudo.concat(caractere);
+    }
+    // Aguarda buffer serial ler próximo caractere
+    delay(10);
+  }
+
+  return conteudo;
+}
+
+void setup() {
+  //-------------------------------------------------------------------------------
+  pinMode(pinAlarme, OUTPUT);
+  pinMode(pinTrava, OUTPUT);
+  Serial.begin(9600);
+  static State s;
+  //-------------------------------------------------------------------------------
+  digitalWrite(pinTrava, LOW);
+  s = Locked;
+  Serial.print("Locked");
+  Lock();
+
+}
+
+void loop() {
+int e;
+  if (Serial.available() > 0) {
+    // Lê toda string recebida
+    String recebido = leStringSerial();
+
+    if (recebido == "Coin" && "COIN" && "coin") {
+    	e = 0;
+      Transition(e);
+    }
+
+    if (recebido == "Pass" && "PASS" && "pass") {
+    	e = 1;
+      Transition(e);
+    } else {
+      Serial.print("Valor Inválido");
+    }
+  }
+}
